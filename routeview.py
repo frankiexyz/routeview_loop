@@ -43,9 +43,14 @@ def parse_routeview(output):
     transit = 0
     for i in output.splitlines():
         try:
-            if ARGS.asn in i and "show" not in i:
-                as_path = str(i.split(",")[0]).strip()
-                upstream_as = as_path.split()[-2]
+            if ARGS.asn in i and "show" not in i and "Community" not in i:
+                if "," in i:
+                    as_path = str(i.split(",")[0]).strip()
+                    index_of_asn = as_path.split().index(ARGS.asn)
+                    upstream_as = as_path.split()[index_of_asn-1]
+                else:
+                    index_of_asn = i.split().index(ARGS.asn)
+                    upstream_as = i.split()[index_of_asn-1]
                 if upstream_as in TRANSIT:
                     transit_seen.append(upstream_as)
                     transit += 1
@@ -71,7 +76,7 @@ def main():
     routeviews.sendline("terminal length 0")
     routeviews.expect("route-views>")
     while True:
-        routeviews.sendline(f"show ip bgp {ARGS.prefix} | include {ARGS.asn},")
+        routeviews.sendline(f"show ip bgp {ARGS.prefix} | include {ARGS.asn}")
         routeviews.expect("route-views>")
         parse_routeview(str(routeviews.before.decode("ascii")))
         time.sleep(ARGS.sleep)
