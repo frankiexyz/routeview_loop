@@ -21,7 +21,7 @@ optional arguments:
                         A list of transit asns eg:
                         '174,1299,3356,5511,3257,2914,7922,1221,4637'
 
-○ → python routeview.py  -r 1.1.1.0/24 -a 13335 -s 30 -t '174,1299,3356,5511,3257,2914,7922,1221,4637'
+○ → python routeview.py  -r 1.1.1.0/24 -a 13335 -s 30 -t '174,1299,3356,5511,3257,2914,7922,1221,4637,6762,12956'
 [14:16:16] connecting to routeview                                                                                                                                                                    routeview.py:64
 [14:16:17] sending username                                                                                                                                                                           routeview.py:67
            connected to routeview                                                                                                                                                                     routeview.py:70

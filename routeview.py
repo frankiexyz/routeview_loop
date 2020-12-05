@@ -27,9 +27,10 @@ try:
         "--transit",
         type=str,
         required=True,
-        help="A list of transit asns eg: '174,1299,3356,5511,3257,2914,7922,1221,4637'",
+        help="A list of transit asns eg: '174,1299,3356,5511,3257,2914,7922,1221,4637,6762,12956'",
     )
     ARGS = ArgParse.parse_args()
+    TRANSIT = ARGS.transit.split(",")
 
 except Exception as e:
     console.log(repr(e))
@@ -37,7 +38,6 @@ except Exception as e:
 
 
 def parse_routeview(output):
-    TRANSIT = ARGS.transit.split(",")
     transit_seen = []
     peer = 0
     transit = 0
