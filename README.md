@@ -8,7 +8,7 @@ pip install -r requirements.txt
 # RUN
 ```
 ○ → python routeview.py  -h
-usage: routeview.py [-h] -r PREFIX -a ASN -s SLEEP -t TRANSIT
+usage: routeview.py [-h] -r PREFIX -a ASN -s SLEEP [--random] -t TRANSIT
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -17,9 +17,10 @@ optional arguments:
   -a ASN, --asn ASN     ASN that we want to check
   -s SLEEP, --sleep SLEEP
                         Sleep for how long
+  --random              Pick a routeview server randomly
   -t TRANSIT, --transit TRANSIT
-                        A list of transit asns eg:
-                        '174,1299,3356,5511,3257,2914,7922,1221,4637'
+                        A list of transit asns eg: '174,1299,3356,5511,3257,29
+                        14,7922,1221,4637,6762,12956'
 
 ○ → python routeview.py  -r 1.1.1.0/24 -a 13335 -s 30 -t '174,1299,3356,5511,3257,2914,7922,1221,4637,6762,12956'
 [14:16:16] connecting to routeview                                                                                                                                                                    routeview.py:64
