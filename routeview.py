@@ -3,6 +3,9 @@
 import argparse
 from rich.console import Console
 import pexpect
+import random
+import requests
+import re
 import time
 import sys
 
@@ -23,6 +26,9 @@ try:
         "-s", "--sleep", type=int, required=True, help="Sleep for how long"
     )
     ArgParse.add_argument(
+        "--random", action="store_true", help="Pick a routeview server randomly"
+    )
+    ArgParse.add_argument(
         "-t",
         "--transit",
         type=str,
@@ -37,20 +43,33 @@ except Exception as e:
     sys.exit(1)
 
 
+def fetch_routeview():
+    routeview_list = list(
+        set(
+            re.findall(
+                "route-views\\S+.routeviews.org",
+                requests.get("http://routeviews.org").text,
+            )
+        )
+    )
+    return routeview_list[random.randrange(len(routeview_list) - 1)]
+
+
 def parse_routeview(output):
+    filtered_output = [i for i in output.splitlines() if ARGS.asn in i]
     transit_seen = []
     peer = 0
     transit = 0
-    for i in output.splitlines():
+    for i in filtered_output:
         try:
             if ARGS.asn in i and "show" not in i and "Community" not in i:
                 if "," in i:
                     as_path = str(i.split(",")[0]).strip()
                     index_of_asn = as_path.split().index(ARGS.asn)
-                    upstream_as = as_path.split()[index_of_asn-1]
+                    upstream_as = as_path.split()[index_of_asn - 1]
                 else:
                     index_of_asn = i.split().index(ARGS.asn)
-                    upstream_as = i.split()[index_of_asn-1]
+                    upstream_as = i.split()[index_of_asn - 1]
                 if upstream_as in TRANSIT:
                     transit_seen.append(upstream_as)
                     transit += 1
@@ -66,19 +85,29 @@ def parse_routeview(output):
 
 
 def main():
-    console.log("connecting to routeview")
-    routeviews = pexpect.spawn("telnet route-views.routeviews.org")
-    routeviews.expect("Username:")
-    console.log("sending username")
-    routeviews.sendline("rviews")
-    routeviews.expect("route-views>")
-    console.log("connected to routeview")
+    routeview_domain = (
+        "route-views.routeviews.org" if not ARGS.random else fetch_routeview()
+    )
+    console.log(f"connecting to {routeview_domain}")
+    routeviews = pexpect.spawn(f"telnet {routeview_domain}")
+    if not ARGS.random:
+        routeviews.expect("Username:")
+        console.log("sending username")
+        routeviews.sendline("rviews")
+    routeviews.expect("route-views.*>")
+    console.log(f"connected to {routeview_domain}")
     routeviews.sendline("terminal length 0")
-    routeviews.expect("route-views>")
+    routeviews.expect("route-views.*>")
     while True:
-        routeviews.sendline(f"show ip bgp {ARGS.prefix} | include {ARGS.asn}")
-        routeviews.expect("route-views>")
-        parse_routeview(str(routeviews.before.decode("ascii")))
+        routeviews.sendline(f"show ip bgp {ARGS.prefix}")
+        routeviews.expect("route-views.*>")
+        routeview_output = str(routeviews.before.decode("ascii"))
+        if "% Network not in table" in routeview_output:
+            console.log(
+                "% Network not in table, you might want to try another route views server"
+            )
+            sys.exit(1)
+        parse_routeview(routeview_output)
         time.sleep(ARGS.sleep)
 
 
