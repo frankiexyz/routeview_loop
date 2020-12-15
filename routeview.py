@@ -99,15 +99,18 @@ def main():
     routeviews.sendline("terminal length 0")
     routeviews.expect("route-views.*>")
     while True:
-        routeviews.sendline(f"show ip bgp {ARGS.prefix}")
+        cmd = f"show ip bgp {ARGS.prefix}"
+        if ":" in ARGS.prefix:
+            cmd = f"show bgp ipv6 unicast {ARGS.prefix}"
+        routeviews.sendline(cmd)
         routeviews.expect("route-views.*>")
         routeview_output = str(routeviews.before.decode("ascii"))
         if "% Network not in table" in routeview_output:
             console.log(
-                "% Network not in table, you might want to try another route views server"
+                "% Network not in table, you might want to try another route views server or keep waiting"
             )
-            sys.exit(1)
-        parse_routeview(routeview_output)
+        else:
+            parse_routeview(routeview_output)
         time.sleep(ARGS.sleep)
 
 
